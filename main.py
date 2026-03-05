@@ -1,4 +1,3 @@
-import streamlit as sl
-
+import streamlit as slm
 
 sl.title("Testing")
