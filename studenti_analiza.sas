@@ -1,5 +1,5 @@
 /* ============================================================
-   ANALIZA DATE STUDENTI - GSLING ACADEMY
+   ANALIZA DATE STUDENTI
    Acoperire cerinte:
      1. Crearea unui set de date SAS din fisiere externe
      2. Formate definite de utilizator
@@ -18,11 +18,9 @@
    1. CREAREA SETULUI DE DATE DIN FISIER EXTERN
    ============================================================ */
 
-
 FILENAME stud "/home/u64505469/Calugaru.Mircea-Costin/data/student-scores.csv";
 
 DATA WORK.studenti;
-    /* 1. Define the exact lengths for your character variables FIRST */
     LENGTH 
         first_name $ 30
         last_name $ 30
@@ -32,11 +30,8 @@ DATA WORK.studenti;
         extracurricular $ 5
         career_aspiration $ 30;
 
-    /* 2. Point to the file */
-    INFILE stud DLM=',' FIRSTOBS=2 DSD TRUNCOVER;
-    
-    /* 3. Read the data using simple List Input. 
-       SAS already knows the lengths from the step above. */
+    INFILE stud FIRSTOBS=2 DSD TRUNCOVER;
+
     INPUT
         id
         first_name $
@@ -86,7 +81,7 @@ PROC FORMAT;
 
     /* Format numeric pentru scor mediu -> calificativ */
     VALUE GRADE_FMT
-        LOW  -< 65 = 'Insuficient'
+        0  -< 65 = 'Insuficient'
         65   -< 75 = 'Satisfacator'
         75   -< 85 = 'Bine'
         85   -< 92 = 'Foarte Bine'
@@ -116,20 +111,19 @@ RUN;
    3. PROCESARE ITERATIVA SI CONDITIONALA
    ============================================================ */
 
+
 DATA WORK.studenti_procesati;
     SET WORK.studenti;
+    
+    LENGTH calificativ $ 15;
 
-    /* 5. FUNCTII SAS (anticipat partial here):
-          MEAN, MAX, MIN, UPCASE, STRIP, COMPRESS */
 
-    /* Media scorurilor - functie SAS */
     avg_score = MEAN(math_score, history_score, physics_score,
                      chemistry_score, biology_score,
                      english_score, geography_score);
-                     
+              
     avg_score = ROUND(avg_score, 0.01);
 
-    /* Scor total */
     total_score = SUM(math_score, history_score, physics_score,
                       chemistry_score, biology_score,
                       english_score, geography_score);
@@ -176,7 +170,7 @@ DATA WORK.studenti_procesati;
     FORMAT avg_score 8.2;
 RUN;
 
-PROC PRINT DATA=WORK.studenti_procesati (OBS=10);
+PROC PRINT DATA=WORK.studenti_procesati (OBS=50);
     VAR id nume_complet avg_score total_score calificativ statut_job
         activ_extracurricular bonus studiu_intens;
     TITLE "3. Procesare iterativa si conditionala";
@@ -213,16 +207,16 @@ DATA WORK.studenti_model;
     WHERE absence_days <= 3 AND weekly_self_study_hours >= 20;
 RUN;
 
-PROC PRINT DATA=WORK.studenti_top;
+PROC PRINT DATA=WORK.studenti_top (OBS=50);
     TITLE "4a. Subset: studenti cu medie >= 85";
 RUN;
-PROC PRINT DATA=WORK.studente_feminine;
+PROC PRINT DATA=WORK.studente_feminine (OBS=50);
     TITLE "4b. Subset: studente feminine";
 RUN;
-PROC PRINT DATA=WORK.aspiratii_nobile;
+PROC PRINT DATA=WORK.aspiratii_nobile (OBS=50);
     TITLE "4c. Subset: viitori medici si avocati";
 RUN;
-PROC PRINT DATA=WORK.studenti_model;
+PROC PRINT DATA=WORK.studenti_model (OBS=50);
     TITLE "4d. Subset: studenti model (absente <= 3, studiu >= 20h)";
 RUN;
 
@@ -264,7 +258,7 @@ DATA WORK.functii_demo;
          id_char scor_char an_curent zi_saptamana;
 RUN;
 
-PROC PRINT DATA=WORK.functii_demo;
+PROC PRINT DATA=WORK.functii_demo (OBS=50);
     TITLE "5. Exemple de functii SAS";
 RUN;
 
@@ -381,8 +375,8 @@ DATA WORK.masive_demo;
                      english_score geography_score;
 
     /* Calcule iterative pe masiv */
-    scor_max2 = 0;
-    scor_min2 = 999;
+    scor_max2 = scoruri[1];
+    scor_min2 = scoruri[1];
     nr_peste_80 = 0;
     nr_sub_70   = 0;
 
@@ -409,14 +403,14 @@ DATA WORK.masive_demo;
          math_n hist_n phys_n chem_n bio_n eng_n geo_n avg_score;
 RUN;
 
-PROC PRINT DATA=WORK.masive_demo;
+PROC PRINT DATA=WORK.masive_demo (OBS=50);
     VAR id nume_complet avg_score scor_max2 scor_min2
         nr_peste_80 nr_sub_70;
     TITLE "7. Masive (ARRAY) - statistici per student";
 RUN;
 
-PROC PRINT DATA=WORK.masive_demo;
-    VAR id nome_complet math_n hist_n phys_n chem_n bio_n eng_n geo_n;
+PROC PRINT DATA=WORK.masive_demo (OBS=10);
+    VAR id nume_complet math_n hist_n phys_n chem_n bio_n eng_n geo_n;
     TITLE "7b. Masive - scoruri normalizate (scala 0-10)";
 RUN;
 
@@ -426,7 +420,7 @@ RUN;
    ============================================================ */
 
 /* 8A: PROC PRINT cu optiuni */
-PROC PRINT DATA=WORK.studenti_procesati NOOBS;
+PROC PRINT DATA=WORK.studenti_procesati (OBS=50) NOOBS;
     VAR id nume_complet gender avg_score calificativ career_aspiration;
     WHERE avg_score >= 80;
     LABEL id='Nr. Crt'
@@ -440,7 +434,7 @@ PROC PRINT DATA=WORK.studenti_procesati NOOBS;
 RUN;
 
 /* 8B: PROC REPORT */
-PROC REPORT DATA=WORK.studenti_procesati NOWD;
+PROC REPORT DATA=WORK.studenti_procesati (OBS=50) NOWD;
     COLUMNS id nume_complet gender avg_score total_score
             absence_days calificativ;
     DEFINE id           / DISPLAY 'ID';
@@ -502,7 +496,7 @@ PROC CORR DATA=WORK.studenti_procesati;
 RUN;
 
 /* 9E: PROC REG - regresie: avg_score ~ absente + ore_studiu */
-PROC REG DATA=WORK.studenti_procesati;
+PROC REG DATA=WORK.studenti_procesati (OBS=100);
     MODEL avg_score = absence_days weekly_self_study_hours / R;
     TITLE "9E. PROC REG - Regresia mediei in functie de absente si ore studiu";
 RUN;
@@ -563,40 +557,11 @@ RUN;
 
 /* 10E: Grafic comparativ scoruri pe discipline (bar clustering) */
 PROC SGPLOT DATA=WORK.studenti_procesati;
-    VBAR id / RESPONSE=math_score    BARWIDTH=0.8
-              FILLATTRS=(COLOR=CX4E79A7)
-              LEGENDLABEL='Matematica';
-    VBAR id / RESPONSE=physics_score BARWIDTH=0.8
-              FILLATTRS=(COLOR=CXE15759)
-              LEGENDLABEL='Fizica';
-    VBAR id / RESPONSE=biology_score BARWIDTH=0.8
-              FILLATTRS=(COLOR=CX59A14F)
-              LEGENDLABEL='Biologie';
-    XAXIS LABEL="Student ID";
+    VBOX math_score /    FILLATTRS=(COLOR=CX4E79A7) LEGENDLABEL='Matematica' NAME='Math';
+    VBOX physics_score / FILLATTRS=(COLOR=CXE15759) LEGENDLABEL='Fizica'     NAME='Phys';
+    VBOX biology_score / FILLATTRS=(COLOR=CX59A14F) LEGENDLABEL='Biologie'   NAME='Bio';
+    
     YAXIS LABEL="Scor";
-    KEYLEGEND / TITLE="Disciplina";
-    TITLE "10E. Comparatie scoruri Matematica / Fizica / Biologie per student";
+    KEYLEGEND 'Math' 'Phys' 'Bio' / TITLE="Disciplina";
+    TITLE "10E. Distributia scorurilor: Matematica / Fizica / Biologie";
 RUN;
-
-/* 10F: SGPANEL - grafice multiple pe gen */
-PROC SGPANEL DATA=WORK.studenti_procesati;
-    PANELBY gender / ONEPANEL;
-    SCATTER X=absence_days Y=avg_score /
-            MARKERATTRS=(SYMBOL=CircleFilled SIZE=9);
-    ROWAXIS LABEL="Medie generala";
-    COLAXIS LABEL="Zile absente";
-    TITLE "10F. Absente vs Medie, separat pe gen (SGPANEL)";
-RUN;
-
-/* 10G: SGSCATTER - matrice de scatter (discipline stem) */
-PROC SGSCATTER DATA=WORK.studenti_procesati;
-    MATRIX math_score physics_score chemistry_score biology_score /
-           DIAGONAL=(HISTOGRAM) GROUP=gender;
-    TITLE "10G. Matrice scatter - discipline STEM, colorat pe gen";
-RUN;
-
-/* ============================================================
-   SFARSIT PROGRAM
-   ============================================================ */
-TITLE;
-%PUT NOTE: Analiza completa a datelor studentilor finalizata cu succes!;
